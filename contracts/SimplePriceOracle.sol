@@ -13,12 +13,12 @@ contract SimplePriceOracle is IPriceOracle {
     }
 
     constructor() {
-        owner == msg.sender;
+        owner = msg.sender;
     }
 
     /// ----- ADMIN FUNCTIONS -----
     function setPrice(address _token, uint256 _price) external onlyOwner {
-        require(_price != 0, 'SimplePriceOracle setPrice: Invalid input price');
+        require(_price != 0, 'setPrice: Invalid input price');
         prices[_token] = _price;
     }
 
@@ -27,6 +27,6 @@ contract SimplePriceOracle is IPriceOracle {
     /// @param _token Token address to get price.
     function getPrice(address _token) external override view returns (uint256 price) {
         price = prices[_token];
-        require(price != 0, 'SimplePriceOracle getPrice: Invalid price');
+        require(price != 0, 'getPrice: Invalid price');
     }
 }

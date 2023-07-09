@@ -22,7 +22,27 @@ contract SimpleLending is ILending {
     mapping(address => Asset) public assets;
     mapping(bytes32 => Position) public positions;
     IPriceOracle public priceOracle;
+    address public owner;
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function setAssetFactor(address _asset, uint _debtFactor, uint _collateralFactor) external onlyOwner {
+        assets[_asset].debtFactor = _debtFactor;
+        assets[_asset].collateralFactor = _collateralFactor;
+    }
+
+    function setPriceOracle(address _priceOracle) external onlyOwner {
+        priceOracle = IPriceOracle(_priceOracle);
+    }
+
+    /// <---- User Functions ---->
     function deposit(address _debt, address _collateral, uint _collateralDelta) external {
         // 0. Copy position
         bytes32 positionKey = getPositionKey(msg.sender, _debt, _collateral);
@@ -45,7 +65,7 @@ contract SimpleLending is ILending {
 
         // 1. Decrease collateral amount & health check
         position.collateralAmount -= _collateralDelta;
-        healthCheck(position, _debt, _collateral);
+        require(_healthCheck(position, _debt, _collateral), "Unhealthy position");
 
         // 2. Transfer collateral from sender
         IERC20(_collateral).transfer(msg.sender, _collateralDelta);
@@ -62,7 +82,7 @@ contract SimpleLending is ILending {
 
         // 1. Increase collateral amount & health check
         position.debtAmount += _debtDelta;
-        healthCheck(position, _debt, _collateral);
+        require(_healthCheck(position, _debt, _collateral), "Unhealthy position");
 
         // 2. Transfer collateral from sender
         IERC20(_debt).transfer(msg.sender, _debtDelta);
@@ -88,11 +108,16 @@ contract SimpleLending is ILending {
 
     function liquidate(address _user, address _debt, address _collateral) external {}
 
-    function healthCheck(
+    function healthCheck(address _user, address _debt, address _collateral) external view returns (bool){
+        bytes32 positionKey = getPositionKey(_user, _debt, _collateral);
+        return _healthCheck(positions[positionKey], _debt, _collateral);
+    }
+
+    function _healthCheck(
         Position memory _position,
         address _debt,
         address _collateral
-    ) public returns (bool){
+    ) internal view returns (bool){
         uint debtValue = Math.mulDiv(
             priceOracle.getPrice(_debt),
             _position.debtAmount,
@@ -101,7 +126,7 @@ contract SimpleLending is ILending {
         uint debtCredit = Math.mulDiv(
             debtValue,
             assets[_debt].debtFactor,
-            1e14
+            1e4
         );
         uint collateralValue = Math.mulDiv(
             priceOracle.getPrice(_collateral),
@@ -111,12 +136,12 @@ contract SimpleLending is ILending {
         uint collateralCredit = Math.mulDiv(
             collateralValue,
             assets[_collateral].collateralFactor,
-            1e14
+            1e4
         );
         return debtCredit < collateralCredit;
     }
 
-    function getPositionKey(address _user, address _debt, address _collateral) internal returns (bytes32){
+    function getPositionKey(address _user, address _debt, address _collateral) public pure returns (bytes32){
         return keccak256(abi.encode(_user, _debt, _collateral));
     }
 }
