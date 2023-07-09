@@ -2,7 +2,7 @@
 
 ## Installation:
 
-1) Clone Factorial v1-core
+1) Clone Factorial internship assignment
 ```
 $ git clone https://github.com/factorial-build/Internship_assignment
 $ cd Internship_assignment

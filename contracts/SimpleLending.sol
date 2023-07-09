@@ -106,6 +106,7 @@ contract SimpleLending is ILending {
         positions[positionKey] = position;
     }
 
+    /// The liquidation is not implemented. It will use the Liquidation module.
     function liquidate(address _user, address _debt, address _collateral) external {}
 
     function healthCheck(address _user, address _debt, address _collateral) external view returns (bool){
