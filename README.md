@@ -1,11 +1,11 @@
-# Liquidation module
+# Tutorial
 
 ## Installation:
 
-1) Clone Liquidation module
+1) Clone Tutorial 
 ```
-$ git clone https://github.com/factorial-build/liquidation_module
-$ cd liquidation_module
+$ git clone https://github.com/factorial-build/tutorial
+$ cd tutorial
 ```
 
 2) Install dependencies
