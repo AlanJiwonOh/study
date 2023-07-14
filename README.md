@@ -4,8 +4,8 @@
 
 1) Clone Liquidation module
 ```
-$ git clone https://github.com/factorial-build/Internship_assignment
-$ cd Internship_assignment
+$ git clone https://github.com/factorial-build/liquidation_module
+$ cd liquidation_module
 ```
 
 2) Install dependencies
