@@ -1,8 +1,8 @@
-# Internship assignment
+# Liquidation module
 
 ## Installation:
 
-1) Clone Factorial internship assignment
+1) Clone Liquidation module
 ```
 $ git clone https://github.com/factorial-build/Internship_assignment
 $ cd Internship_assignment
