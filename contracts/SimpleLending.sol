@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
 import "./libraries/Math.sol";
 
 import "../interfaces/IERC20.sol";
 import "../interfaces/ILending.sol";
 import "../interfaces/IPriceOracle.sol";
+import "./SimpleLiquidation.sol";
+
 
 /// @title Simple Lending
 contract SimpleLending is ILending {
@@ -22,6 +25,8 @@ contract SimpleLending is ILending {
     mapping(address => Asset) public assets;
     mapping(bytes32 => Position) public positions;
     IPriceOracle public priceOracle;
+    ILiquidation public liquidationModule;
+    
     address public owner;
 
     modifier onlyOwner() {
@@ -40,6 +45,10 @@ contract SimpleLending is ILending {
 
     function setPriceOracle(address _priceOracle) external onlyOwner {
         priceOracle = IPriceOracle(_priceOracle);
+    }
+
+    function setLiquidationModule(address _liquidationModule) external onlyOwner {
+        liquidationModule = ILiquidation(_liquidationModule);
     }
 
     /// <---- User Functions ---->
@@ -72,7 +81,6 @@ contract SimpleLending is ILending {
 
         // 3. Store position changes
         positions[positionKey] = position;
-
     }
 
     function borrow(address _debt, address _collateral, uint _debtDelta) external {
@@ -96,7 +104,7 @@ contract SimpleLending is ILending {
         bytes32 positionKey = getPositionKey(msg.sender, _debt, _collateral);
         Position memory position = positions[positionKey];
 
-        // 1. Increase collateral amount
+        // 1. Decrease collateral amount
         position.debtAmount -= _debtDelta;
 
         // 2. Transfer collateral from sender
@@ -106,8 +114,36 @@ contract SimpleLending is ILending {
         positions[positionKey] = position;
     }
 
-    /// The liquidation is not implemented. It will use the Liquidation module.
-    function liquidate(address _user, address _debt, address _collateral) external {}
+    function liquidateReady(address _user, address _debt, address _collateral) external {
+        bytes32 positionKey = getPositionKey(_user, _debt, _collateral);
+
+        require(!_healthCheck(positions[positionKey], _debt, _collateral), "Over-collateralization");
+        require(!liquidationModule.isLiquidating(positionKey), "The liquidation item is already registered");
+
+        liquidationModule.request(positionKey);        
+    }
+
+    function liquidate(address _user, address _debt, address _collateral, address _liquidator, address _token) external {
+        bytes32 positionKey = getPositionKey(_user, _debt, _collateral);
+        require(liquidationModule.isLiquidating(positionKey), "Liqudation is not ready");
+        
+        Position memory position = positions[positionKey];
+        uint liquidationAmount = liquidationModule.execute(positionKey, _collateral, position.collateralAmount, _liquidator, _token);
+        require(liquidationAmount > 0, "No free lunch");
+
+        /// <---- Disposal ---->
+        {
+            //acquisition: from lending to liquidiator
+            IERC20(_collateral).transfer(_liquidator, position.collateralAmount);  
+            
+            //repayment: from liquidator to lending
+            //fixme: approve to get allowance
+            // IERC20(_token).transferFrom(_liquidator, address(this), liquidationAmount);  
+            IERC20(_token).transferFrom(_liquidator, address(this), 0);      
+        }
+        
+        _resetPosition(positionKey);
+    }
 
     function healthCheck(address _user, address _debt, address _collateral) external view returns (bool){
         bytes32 positionKey = getPositionKey(_user, _debt, _collateral);
@@ -123,12 +159,12 @@ contract SimpleLending is ILending {
             priceOracle.getPrice(_debt),
             _position.debtAmount,
             1e18
-        );
+        ); 
         uint debtCredit = Math.mulDiv(
             debtValue,
             assets[_debt].debtFactor,
             1e4
-        );
+        ); 
         uint collateralValue = Math.mulDiv(
             priceOracle.getPrice(_collateral),
             _position.collateralAmount,
@@ -142,7 +178,17 @@ contract SimpleLending is ILending {
         return debtCredit < collateralCredit;
     }
 
+    function _resetPosition(bytes32 _key) private {
+        Position memory position = positions[_key];
+        position.debtAmount = 0;
+        position.collateralAmount = 0;
+
+        positions[_key] = position;
+    }
+
     function getPositionKey(address _user, address _debt, address _collateral) public pure returns (bytes32){
         return keccak256(abi.encode(_user, _debt, _collateral));
     }
+
+    
 }
