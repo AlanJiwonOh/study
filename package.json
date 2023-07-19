@@ -1,5 +1,5 @@
 {
-  "name": "@factorial/internship_assignment",
+  "name": "study",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
@@ -11,17 +11,18 @@
     "decimal.js": "^10.2.1",
     "ethereum-waffle": "^3.0.2",
     "ethers": "^5.0.8",
-    "hardhat": "^2.6.8",
+    "hardhat": "^2.17.0",
+    "hardhat-contract-sizer": "^2.5.1",
+    "hardhat-gas-reporter": "^1.0.9",
     "hardhat-typechain": "^0.3.5",
     "hardhat-watcher": "^2.1.1",
-    "hardhat-gas-reporter": "^1.0.9",
-    "hardhat-contract-sizer": "^2.5.1",
     "is-svg": "^4.3.1",
     "mocha-chai-jest-snapshot": "^1.1.0",
     "prettier": "^2.0.5",
     "prettier-plugin-solidity": "^1.0.0-beta.10",
     "solhint": "^3.2.1",
     "solhint-plugin-prettier": "^0.0.5",
+    "solidity-coverage": "^0.8.4",
     "ts-generator": "^0.1.1",
     "ts-node": "^8.5.4",
     "typechain": "^4.0.0",
@@ -30,5 +31,24 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.3",
     "base64-sol": "1.1.0"
-  }
+  },
+  "description": "## Installation:",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlanJiwonOh/study.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlanJiwonOh/study/issues"
+  },
+  "homepage": "https://github.com/AlanJiwonOh/study#readme"
 }

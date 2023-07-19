@@ -6,6 +6,7 @@ import 'hardhat-typechain'
 import 'hardhat-watcher'
 import "hardhat-gas-reporter";
 import "hardhat-contract-sizer";
+import 'solidity-coverage'
 
 const DEFAULT_COMPILER_SETTINGS = {
   version: '0.8.18',
